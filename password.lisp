@@ -24,15 +24,17 @@
 (declaim (optimize speed safety))
 
 (let ((character-classes
-       '((upper . #.(coerce "ABCDEFGHIJKLMNOPQRSTUVWXYZ" 'simple-base-string))
-	 (lower . #.(coerce "abcdefghijklmnopqrstuvwxyz" 'simple-base-string))
-	 (number . #.(coerce "0123456789" 'simple-base-string))
-	 (alphanum . (upper lower lower number))
-	 (punctuation . #.(coerce "_,.:;?!+-*/%|{}()[]~&$@" 'simple-base-string))
-	 (all . (alphanum punctuation)))))
-
+       '((:upper . #.(coerce "ABCDEFGHIJKLMNOPQRSTUVWXYZ" 'simple-base-string))
+	 (:lower . #.(coerce "abcdefghijklmnopqrstuvwxyz" 'simple-base-string))
+	 (:alpha . (:upper :lower :lower))
+	 (:number . #.(coerce "0123456789" 'simple-base-string))
+	 (:alphanum . (:alpha :alpha :number))
+	 (:punctuation . #.(coerce "_,.:;?!+-*/%|{}()[]~&$@" 'simple-base-string))
+	 (:all . (:alphanum :alphanum :punctuation)))))
+  
   (defun collect-character-class (name)
     (let ((members (cdr (assoc name character-classes))))
+      (unless members (error "Unknown character class ~S" name))
       (etypecase members
 	(string (list members))
 	(list   (mapcan 'collect-character-class members)))))
@@ -61,8 +63,9 @@
       (unless (check-class c string)
 	(return-from check-classes nil))))
   
-  (defun make-password (&key (bits 64) (classes 'all))
-    (let* ((classes (character-class-list classes))
+  (defun make-password (&key (bits 64) (classes :all))
+    (let* ((classes (apply #'character-class-list
+			   (if (listp classes) classes (list classes))))
 	   (chars (apply #'concatenate 'simple-base-string classes))
 	   (single-chars (the simple-base-string
 			   (remove-duplicates chars)))
