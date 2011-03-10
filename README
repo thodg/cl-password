@@ -21,23 +21,26 @@ MAKE-PASSWORD
 Returns a password with at least BITS random bits and
 at least one character from each character CLASSES.
 
+BITS ensures that guessing the password has a probability lower than
+(/ 1 (expt 2 BITS))
+
 Examples :
 
-;;  by default get 64 random bits and all character classes
+;;  by default we get 64 random bits using all character classes
 
 (make-password)
 ~> "5cez/]iPQc"
 
 (make-password)
-~> "IFg8(OlaBl"
+~> "IFg8(O,aBl"
 
-;;  still 64 random bits but with only lower case password is longer
+;;  still 64 random bits but using only lower case, makes password longer
 
 (make-password :classes :lower)
 ~> "rdscqmusxxisfa"
 
 (make-password :classes :alphanum)
-~> "opQV02RJmgg"
+~> "opQV92RJmgg"
 
 ;;  more bits
 
